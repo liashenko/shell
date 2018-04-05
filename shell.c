@@ -18,9 +18,14 @@
  */
 #include "shell.h"
 
-#define PROMPT_TEXT "shell > "
+#define BUFFER_SIZE 1024
+char prompt_text[BUFFER_SIZE];
+void set_prompt_text() {
+    getcwd(prompt_text, BUFFER_SIZE);
+    sprintf(prompt_text, "%s: > ", prompt_text);
+}
 char* read_input() {
-    char *input = readline(PROMPT_TEXT);
+    char *input = readline(prompt_text);
     add_history(input);
     return input;
 }
@@ -79,6 +84,7 @@ int shell_cd(char** argv) {
         printf("shell: %s: No such file or directory\n", argv[1]);   
         return 1;
     }
+    set_prompt_text();
     return 1;
 }
 
@@ -125,6 +131,7 @@ int main() {
     char *input = NULL;
     char **argv = NULL;
     int status = 1;
+    set_prompt_text();
     do {
         input = read_input();
         argv = parse_input(input);
