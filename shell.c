@@ -72,10 +72,13 @@ int shell_help(char** argv) {
     return 1;
 }
 int shell_cd(char** argv) {
-    if (argv == NULL || argv[0] == NULL) {
+    if (argv == NULL || argv[0] == NULL || argv[1] == NULL) {
         return 1;
     }
-    // chdir(argv[1]);
+    if (chdir(argv[1])) {
+        printf("shell: %s: No such file or directory\n", argv[1]);   
+        return 1;
+    }
     return 1;
 }
 
