@@ -30,7 +30,10 @@ char *read_input() {
 }
 
 #define TOKENS_DELIMETERS " "
-#define TOKENS_BUFFER_SIZE 64
+#define TOKENS_BUFFER_SIZE 256
+#define TOKEN_SIZE 256
+int is_delimeter(char ch) { return strchr(TOKENS_DELIMETERS, ch) != NULL; }
+int is_quote(char ch) { return (ch == '\"' || ch == '\''); }
 char **parse_input(char *input) {
   if (input == NULL) {
     return NULL;
@@ -41,19 +44,33 @@ char **parse_input(char *input) {
     printf("shell: allocation error\n");
     exit(EXIT_FAILURE);
   }
-  int size = 0;
-  char *token = strtok(input, TOKENS_DELIMETERS);
-  while (token) {
-    if (size >= capacity) {
-      printf("shell: command is too long\n");
-      free(token);
-      free(tokens);
-      return NULL;
-    }
-    tokens[size++] = token;
-    token = strtok(NULL, TOKENS_DELIMETERS);
+  char *token = malloc(TOKEN_SIZE * sizeof(char));
+  if (token == NULL) {
+    printf("shell: allocation error\n");
+    exit(EXIT_FAILURE);
   }
-  tokens[size] = NULL;
+  int tokens_number = 0;
+  int token_i = 0;
+  int input_i = 0;
+  char is_in_quote = 0;
+  while (input[input_i] != '\0') {
+    if (is_quote(input[input_i])) {
+      is_in_quote = !is_in_quote;
+    } else if (!is_in_quote && is_delimeter(input[input_i])) {
+      if (token_i > 0) {
+        tokens[tokens_number++] = strdup(token);
+        memset(token, 0, TOKEN_SIZE * sizeof(char));
+        token_i = 0;
+      }
+    } else {
+      token[token_i++] = input[input_i];
+    }
+    ++input_i;
+  }
+  if (token_i > 0) {
+    tokens[tokens_number++] = strdup(token);
+  }
+  tokens[tokens_number] = NULL;
   free(token);
   return tokens;
 }
@@ -99,7 +116,7 @@ int shell_cd(char **argv) {
 }
 
 int execute_command(char **argv) {
-  if (argv == NULL) {
+  if (argv == NULL && argv[0] == NULL) {
     printf("shell: command not found\n");
     return 1;
   }
