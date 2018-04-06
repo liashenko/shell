@@ -1,3 +1,4 @@
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,7 @@
 char *read_input();
 char **parse_input(char *input);
 int execute(char **argv);
-int execute_command(char **argv);
+int execute_external(char **argv);
 
 /** Builtin functions */
 int shell_exit(char **argv);
@@ -19,12 +20,9 @@ int shell_cd(char **argv);
 
 /** Builtins */
 struct builtin {
-  int (*func)(char **);
   char *name;
+  int (*func)(char **);
 };
-typedef struct builtin builtin;
-const static builtin builtin_exit = {&shell_exit, "exit"};
-const static builtin builtin_help = {&shell_help, "help"};
-const static builtin builtin_cd = {&shell_cd, "cd"};
-const static struct builtin *builtins[4] = {&builtin_help, &builtin_cd,
-                                            &builtin_exit, NULL};
+const static struct builtin builtins[] = {
+    {"help", &shell_help}, {"cd", &shell_cd}, {"exit", &shell_exit}};
+int builtins_number() { return sizeof(builtins) / sizeof(struct builtin); }

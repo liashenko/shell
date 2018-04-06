@@ -10,7 +10,6 @@
  *  shell also supports linux commands as external executables.
  *
  *  @TODO:
- *      change strtok to escape quotes
  *      ctrl-c should not kill the shell, but kill currently executing program
  *      piping (ls > out)
  *      globbing (ls *.c)
@@ -79,16 +78,15 @@ int execute(char **argv) {
   if (argv == NULL || argv[0] == NULL) {
     return 1;
   }
-  /** check is it builtin */
+  /** check if command is a builtin */
   int i = 0;
-  while (builtins[i]) {
-    if (!strcmp(argv[0], builtins[i]->name)) {
-      return builtins[i]->func(argv);
+  while (i < builtins_number()) {
+    if (!strcmp(argv[0], builtins[i].name)) {
+      return builtins[i].func(argv);
     }
     ++i;
   }
-  /** execute external executable program */
-  return execute_command(argv);
+  return execute_external(argv);
 }
 /** Builtins */
 int shell_exit(char **argv) { return 0; }
@@ -115,7 +113,7 @@ int shell_cd(char **argv) {
   return 1;
 }
 
-int execute_command(char **argv) {
+int execute_external(char **argv) {
   if (argv == NULL && argv[0] == NULL) {
     printf("shell: command not found\n");
     return 1;
