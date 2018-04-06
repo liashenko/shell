@@ -1,4 +1,4 @@
-#include <setjmp.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +8,7 @@
 #include <readline/readline.h>
 
 /** Function declarations */
+void sig_handler(int sig) {}
 char *read_input();
 char **parse_input(char *input);
 int execute(char **argv);

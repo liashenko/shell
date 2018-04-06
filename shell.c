@@ -10,9 +10,9 @@
  *  shell also supports linux commands as external executables.
  *
  *  @TODO:
- *      ctrl-c should not kill the shell, but kill currently executing program
  *      piping (ls > out)
  *      globbing (ls *.c)
+ *      multiple commands &&, |
  */
 #include "shell.h"
 
@@ -143,6 +143,7 @@ int main() {
   int status = 1;
   set_prompt_text();
   rl_bind_key('\t', rl_complete);
+  signal(SIGINT, sig_handler);
   do {
     input = read_input();
     argv = parse_input(input);
