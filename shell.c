@@ -127,6 +127,7 @@ int main() {
   char **argv = NULL;
   int status = 1;
   set_prompt_text();
+  rl_bind_key('\t', rl_complete);
   do {
     input = read_input();
     argv = parse_input(input);
