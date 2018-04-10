@@ -10,9 +10,10 @@
  *  shell also supports external commands.
  *
  *  @TODO:
- *      piping (>, <, >>, |)
+ *      output redirection (>, <)
+ *      multiple commands piping
  *      globbing (ls *.c)
- *      multiple commands &&
+ *      multiple commands ;
  */
 #include "shell.h"
 
@@ -82,10 +83,9 @@ int execute(char **argv) {
     if (argv[j][0] == '|') {
       return execute_pipe(argv);
     }
-    if (argv[j] != NULL)
     ++j;
   }
-  /** check if command is a builtin */
+  /** check if the command is a builtin */
   int i = 0;
   while (i < builtins_number()) {
     if (!strcmp(argv[0], builtins[i].name)) {
@@ -120,54 +120,56 @@ int execute_external(char **argv) {
   return 1;
 }
 
-int execute_pipe(char** argv) {
-    char **argv1 = malloc(TOKENS_BUFFER_SIZE * sizeof(char *));
-    char **argv2 = malloc(TOKENS_BUFFER_SIZE * sizeof(char *));
-    if (argv1 == NULL || argv2 == NULL) {
-      printf("shell: allocation error\n");
-      exit(EXIT_FAILURE);
-    }
-    int i = 0, j = 0;
-    while (argv[i][0] != '|') {
-      argv1[i] = argv[i];
-      ++i;
-    }
-    ++i;
-    while (argv[i] != NULL) {
-      argv2[j] = argv[i];
-      ++i, ++j;
-    }
-    int pipefd[2];
-    pipe(pipefd);
-    pid_t pid1 = fork();
-    if (pid1 < 0) {
-      printf("shell: forking child process failed\n");
-      exit(EXIT_FAILURE);
-    } else if (pid1 == 0) {
-      dup2(pipefd[1], 1);
-      close(pipefd[0]);
-      if (execvp(argv1[0], argv1) < 0) {
-        printf("shell: %s: command not found\n", argv1[0]);
-        exit(EXIT_FAILURE);
-      }
-    } 
-    pid_t pid2 = fork();
-    if (pid2 < 0) {
-      printf("shell: forking child process failed\n");
-      exit(EXIT_FAILURE);
-    } else if (pid2 == 0) {
-      dup2(pipefd[0], 0);
-      close(pipefd[1]);
-      if (execvp(argv2[0], argv2) < 0) {
-        printf("shell: %s: command not found\n", argv2[0]);
-        exit(EXIT_FAILURE);
-      }
-    }
+int execute_pipe(char **argv) {
+  char **argv1 = malloc(TOKENS_BUFFER_SIZE * sizeof(char *));
+  char **argv2 = malloc(TOKENS_BUFFER_SIZE * sizeof(char *));
+  extract_commands(argv, argv1, argv2);
+  int pipefd[2];
+  pipe(pipefd);
+  pid_t pid1 = fork();
+  if (pid1 < 0) {
+    printf("shell: forking child process failed\n");
+    exit(EXIT_FAILURE);
+  } else if (pid1 == 0) {
+    dup2(pipefd[1], 1);
     close(pipefd[0]);
+    execute(argv1);
+    exit(EXIT_SUCCESS);
+  }
+  pid_t pid2 = fork();
+  if (pid2 < 0) {
+    printf("shell: forking child process failed\n");
+    exit(EXIT_FAILURE);
+  } else if (pid2 == 0) {
+    dup2(pipefd[0], 0);
     close(pipefd[1]);
-    waitpid(pid1, NULL, 0);
-    waitpid(pid2, NULL, 0);
-    return 1;
+    execute(argv2);
+    exit(EXIT_SUCCESS);
+  }
+  close(pipefd[0]);
+  close(pipefd[1]);
+  waitpid(pid1, NULL, 0);
+  waitpid(pid2, NULL, 0);
+  return 1;
+}
+
+int extract_commands(char **argv, char **argv1, char **argv2) {
+  if (argv1 == NULL || argv2 == NULL) {
+    printf("shell: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+  int i = 0;
+  while (argv[i][0] != '|') {
+    argv1[i] = argv[i];
+    ++i;
+  }
+  ++i;
+  int j = 0;
+  while (argv[i] != NULL) {
+    argv2[j] = argv[i];
+    ++i, ++j;
+  }
+  return 1;
 }
 
 /** Builtins */

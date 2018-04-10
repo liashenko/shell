@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,11 +18,14 @@ void set_prompt_text();
 void sig_handler(int sig) {}
 char *read_input();
 char **parse_input(const char *input);
-int is_delimeter(const char ch) { return strchr(TOKENS_DELIMETERS, ch) != NULL; }
+int is_delimeter(const char ch) {
+  return strchr(TOKENS_DELIMETERS, ch) != NULL;
+}
 int is_quote(const char ch) { return (ch == '\"' || ch == '\''); }
 int execute(char **argv);
 int execute_external(char **argv);
-int execute_pipe(char** argv);
+int execute_pipe(char **argv);
+int extract_commands(char **argv, char **argv1, char **argv2);
 
 /** Builtin functions */
 int shell_exit(char **argv);
