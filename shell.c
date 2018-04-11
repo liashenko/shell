@@ -9,11 +9,6 @@
  *      exit
  *  shell also supports external commands.
  *
- *  @TODO:
- *      output redirection (>, <)
- *      multiple commands piping
- *      globbing (ls *.c)
- *      multiple commands ;
  */
 #include "shell.h"
 
